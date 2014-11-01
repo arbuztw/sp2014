@@ -16,15 +16,20 @@ typedef struct {
    int key;
 } Player;
 
+Player p[4];
+int pile[53];
+char child_fifo[4][16];
 
 void init();
 void sort(Player arr[], int n);
+void shuffle(int arr[], int n);
+void make_child_fifo();
+void clean_child_fifo();
 
 int main(int argc, char *argv[])
 {
    int i, stat;
-   int fd_rd, fd_wr[4];
-   Player p[4];
+   int fd_rd;
    char fname[16], pindex[4], key[8];
 
 
@@ -42,21 +47,19 @@ int main(int argc, char *argv[])
       ERR_EXIT("open");
    unlink(fname);
 
-   for (i = 0; i < 4; i++) {
-      sprintf(fname, "judge%s_%c.FIFO", argv[1], 'A'+i);
-      if (mkfifo(fname, 0664) < 0)
-         ERR_EXIT("mkfifo");
-   } 
+   make_child_fifo(argv[1]);
 
    while (~scanf("%d %d %d %d", &p[0].id, &p[1].id, &p[2].id, &p[3].id)) {
       sort(p, 4);
+      init();
       for (i = 0; i < 4; i++) {
          sprintf(pindex, "%c", 'A'+i);
-         sprintf(key, "%d", rand() % 65536);
+         sprintf(key, "%d", p[i].key);
          if ((p[i].pid = fork()) == 0) {
             if (execlp("./player", "player", argv[1], pindex, key, (char*)0) < 0)
                ERR_EXIT("execl");
          }
+         p[i].pipe_fd = open(child_fifo[i], O_WRONLY);
       }
 
       //sleep(5);
@@ -66,8 +69,7 @@ int main(int argc, char *argv[])
       while (wait(&stat) > 0);
    }
 
-
-
+   clean_child_fifo();
 
 
 
@@ -86,4 +88,55 @@ void sort(Player arr[], int n)
             arr[i] = arr[j];
             arr[j] = tmp;
          }
+}
+
+void init()
+{
+   int i, j;
+
+   for (i = 0; i < 4; i++)
+   {
+      p[i].num_card = i > 0 ? 13 : 14;
+      p[i].key = rand() % 65536;
+   }
+   
+   pile[0] = 0;
+   for (i = 1; i <= 4; i++)
+      for (j = 1; j <= 13; j++)
+         pile[i*j] = j;
+   shuffle(pile, 53);
+}
+
+void shuffle(int arr[], int n)
+{
+   int i, j, tmp;
+
+   for (i = 0; i < n; i++)
+   {
+      j = rand() % (i + 1);
+      tmp = arr[j];
+      arr[j] = arr[i];
+      arr[i] = tmp;
+   }
+}
+
+void make_child_fifo(char *judge)
+{
+   int i;
+
+   for (i = 0; i < 4; i++) {
+      sprintf(child_fifo[i], "judge%s_%c.FIFO", judge, 'A'+i); 
+      if (mkfifo(child_fifo[i], 0666) < 0)
+         ERR_EXIT("mkfifo");
+   }
+}
+
+void clean_child_fifo()
+{
+   int i;
+
+   for (i = 0; i < 4; i++) {
+      if (unlink(child_fifo[i]) < 0)
+         ERR_EXIT("unlink");
+   }
 }
