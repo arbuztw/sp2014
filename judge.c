@@ -8,14 +8,23 @@
 #define SWAP(a,b) a^=b^=a^=b
 #define ERR_EXIT(s) { perror(s); exit(1); }
 
+typedef struct {
+	int id;
+	int num_card;
+	int pipe_fd;
+	int pid;
+	int key;
+} Player;
 
-void sort(int arr[], int n);
+
+void init();
+void sort(Player arr[], int n);
 
 int main(int argc, char *argv[])
 {
 	int i, stat;
 	int fd_rd, fd_wr[4];
-	int player[4], pid[4];
+	Player p[4];
 	char fname[16], pindex[4], key[8];
 
 
@@ -39,12 +48,12 @@ int main(int argc, char *argv[])
 			ERR_EXIT("mkfifo");
 	} 
 
-	while (~scanf("%d %d %d %d", &player[0], &player[1], &player[2], &player[3])) {
-		sort(player, 4);
+	while (~scanf("%d %d %d %d", &p[0].id, &p[1].id, &p[2].id, &p[3].id)) {
+		sort(p, 4);
 		for (i = 0; i < 4; i++) {
 			sprintf(pindex, "%c", 'A'+i);
 			sprintf(key, "%d", rand() % 65536);
-			if ((pid[i] = fork()) == 0) {
+			if ((p[i].pid = fork()) == 0) {
 				if (execlp("./player", "player", argv[1], pindex, key, (char*)0) < 0)
 					ERR_EXIT("execl");
 			}
@@ -52,7 +61,7 @@ int main(int argc, char *argv[])
 
 		//sleep(5);
 		for (i = 0; i < 4; i++) {
-			kill(pid[i], SIGTERM);
+			kill(p[i].pid, SIGTERM);
 		}
 		while (wait(&stat) > 0);
 	}
@@ -65,12 +74,13 @@ int main(int argc, char *argv[])
 	return 0;
 }
 
-void sort(int arr[], int n)
+void sort(Player arr[], int n)
 {
-	int i, j, tmp;
+	int i, j;
+	Player tmp;
 	for (i = 0; i < n; i++)
 		for (j = i + 1; j < n; j++)
-			if (arr[i] > arr[j])
+			if (arr[i].id > arr[j].id)
 			{
 				tmp = arr[i];
 				arr[i] = arr[j];
