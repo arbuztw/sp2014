@@ -18,8 +18,9 @@ typedef struct {
 } Player;
 
 Player p[4];
-int fd_rd, pile[53];
+int pile[53];
 char child_fifo[4][16];
+FILE *fin;
 
 void init();
 void sort(Player arr[], int n);
@@ -46,24 +47,24 @@ int main(int argc, char *argv[])
    if (mkfifo(fname, 0664) < 0)
       ERR_EXIT("mkfifo");
 
-   if ((fd_rd = open(fname, O_RDONLY | O_NONBLOCK)) < 0)
-      ERR_EXIT("open");
-   unlink(fname);
-
    make_child_fifo(argv[1]);
 
-   while (~scanf("%d %d %d %d", &p[0].id, &p[1].id, &p[2].id, &p[3].id)) {
+   scanf("%d %d %d %d", &p[0].id, &p[1].id, &p[2].id, &p[3].id);
+   while (p[0].id || p[1].id || p[2].id || p[3].id) {
       sort(p, 4);
       init();
       for (i = 0; i < 4; i++) {
          sprintf(pindex, "%c", 'A'+i);
          sprintf(key, "%d", p[i].key);
+         fprintf(stderr, "%c %s\n", 'A'+i, key);
          if ((p[i].pid = fork()) == 0) {
             if (execlp("./player", "player", argv[1], pindex, key, (char*)0) < 0)
                ERR_EXIT("execl");
          }
          p[i].pipe = fopen(child_fifo[i], "w");
       }
+
+      fin = fopen(fname, "r");
 
       deal_card();
 
@@ -73,8 +74,7 @@ int main(int argc, char *argv[])
             cnt++;
 
       cur = 0;
-      while (cnt > 1)
-      {
+      while (cnt > 1) {
          while (p[cur].num_card == 0) cur = (cur + 1) % 4;
          nxt = (cur + 1) % 4;
          while (p[nxt].num_card == 0) nxt = (nxt + 1) % 4;
@@ -104,13 +104,17 @@ int main(int argc, char *argv[])
          kill(p[i].pid, SIGTERM);
       }
       while (wait(&stat) > 0);
+      fclose(fin);
 
       for (i = 0; i < 4; i++)
          if (p[i].num_card > 0)
             printf("%d\n", p[i].id);
+
+      scanf("%d %d %d %d", &p[0].id, &p[1].id, &p[2].id, &p[3].id);
    }
 
    clean_child_fifo();
+   unlink(fname);
 
 
 
@@ -203,11 +207,11 @@ void deal_card()
 
 int read_from_pipe(int *num)
 {
-   int i, len, pidx, key;
+   int i, pidx, key;
    char buf[BUFSZ];
 
-   if ((len = read(fd_rd, &buf, BUFSZ)) < 0)
-      ERR_EXIT("read");
+   fgets(buf, BUFSZ, fin);
+   //fprintf(stderr, "buf=%s", buf);
 
    pidx = buf[0] - 'A';
    key = 0;
@@ -218,7 +222,7 @@ int read_from_pipe(int *num)
       exit(1);
    }
    *num = 0;
-   for (i++; buf[i]; i++)
+   for (i++; buf[i] != '\n'; i++)
       *num = *num * 10 + buf[i] - '0';
    return pidx;
 }
