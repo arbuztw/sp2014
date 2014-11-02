@@ -107,8 +107,10 @@ int main(int argc, char *argv[])
       fclose(fin);
 
       for (i = 0; i < 4; i++)
-         if (p[i].num_card > 0)
+         if (p[i].num_card > 0) {
             printf("%d\n", p[i].id);
+            fflush(stdout);
+         }
 
       scanf("%d %d %d %d", &p[0].id, &p[1].id, &p[2].id, &p[3].id);
    }
