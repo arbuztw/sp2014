@@ -93,6 +93,7 @@ int main(int argc, char *argv[])
 
          read_from_pipe(&num);
          if (num) p[cur].num_card--;
+         else p[cur].num_card++;
 
          if (p[cur].num_card == 0) cnt--;
          if (p[nxt].num_card == 0) cnt--;

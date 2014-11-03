@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#define NUM_CARD 16 
+#define NUM_CARD 1024 
 #define MAX_ID 13
 #define BUFSZ 1024
 
@@ -18,27 +18,27 @@ void remove_dup();
 void remove_card(int id);
 int get_card_n(int n);
 
+
 int main(int argc, char *argv[])
 {
-   int i, id, num;
+   int i, id, num, m;
    char type[4], fname[16];
    FILE *fin, *fout;
-
    
    sprintf(fname, "judge%s_%s.FIFO", argv[1], argv[2]);
    fin = fopen(fname, "r");
    sprintf(fname, "judge%s.FIFO", argv[1]);
    fout = fopen(fname, "w");
 
-   num_card = (argv[2][0] == 'A') ? 14 : 13;
+   m = (argv[2][0] == 'A') ? 14 : 13;
+   num_card = 0;
    head = getNode();
    head->id = -1;
    head->next = tail = NULL;
 
-   for (i = 0; i < num_card; i++) {
+   for (i = 0; i < m; i++) {
       fscanf(fin, "%d", &id);
       insert_card(id);
-      count[id]++;
    }
 
    remove_dup();
@@ -51,20 +51,17 @@ int main(int argc, char *argv[])
          fflush(fout);
          fscanf(fin, "%d", &num);
          if (count[num] > 0) {
-            num_card--;
-            count[num]--;
             remove_card(num);
             fprintf(fout, "%s %s 1\n", argv[2], argv[3]);
          }
          else {
-            num_card++;
-            count[num]++;
             insert_card(num);
             fprintf(fout, "%s %s 0\n", argv[2], argv[3]);
          }
       }
       else {
          num = get_card_n(num);
+         remove_card(num);
          fprintf(fout, "%s %s %d\n", argv[2], argv[3], num);
       }
       fflush(fout);
@@ -79,6 +76,9 @@ int main(int argc, char *argv[])
 void insert_card(int id)
 {
    struct Node *p = getNode();
+
+   num_card++;
+   count[id]++;
 
    p->id = id;
    p->next = NULL;
@@ -102,6 +102,7 @@ void remove_dup()
    while (p->next) {
       if (rmcnt[p->next->id] > 0) {
          num_card--;
+         count[p->next->id]--;
          rmcnt[p->next->id]--;
          p->next = p->next->next;
       }
@@ -118,6 +119,7 @@ void remove_card(int id)
    for (p = head; p->next; p = p->next) {
       if (p->next->id == id) {
          num_card--;
+         count[id]--;
          p->next = p->next->next;
          break;
       }
