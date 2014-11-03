@@ -101,11 +101,10 @@ int main(int argc, char *argv[])
          cur = nxt;
       }
 
-      for (i = 0; i < 4; i++) {
-         kill(p[i].pid, SIGTERM);
-      }
-      while (wait(&stat) > 0);
+      for (i = 0; i < 4; i++)
+         fclose(p[i].pipe);
       fclose(fin);
+      while (wait(&stat) > 0);
 
       for (i = 0; i < 4; i++)
          if (p[i].num_card > 0) {
