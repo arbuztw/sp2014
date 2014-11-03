@@ -20,6 +20,7 @@ int score[MAX_PLAYER], player_id[MAX_PLAYER];
 int comp[MAX_COMP][4], comp_num;
 void assign(int judgeid, int comp_id);
 int get_loser(int fd);
+void sortByScore(int n);
 
 int main(int argc, char *argv[])
 {
@@ -104,6 +105,13 @@ int main(int argc, char *argv[])
       fprintf(stderr, "%d ", score[i]);
    fprintf(stderr, "\n");
    */
+
+   for (i = 1; i <= player_num; i++) player_id[i] = i;
+   sortByScore(player_num);
+
+   for (i = 1; i < player_num; i++)
+      fprintf(stderr, "%d ", player_id[i]);
+   fprintf(stderr, "%d\n", player_id[i]);
    
    return 0;
 }
@@ -127,4 +135,21 @@ int get_loser(int fd)
    for (i = 0; buf[i] != '\n'; i++)
       val = val * 10 + buf[i] - '0';
    return val;
+}
+
+void sortByScore(int n)
+{
+   int i, j, tmp;
+
+   for (i = 1; i <= n; i++)
+      for (j = i + 1; j <= n; j++)
+         if (score[i] < score[j])
+         {
+            tmp = score[i];
+            score[i] = score[j];
+            score[j] = tmp;
+            tmp = player_id[i];
+            player_id[i] = player_id[j];
+            player_id[j] = tmp;
+         }
 }
