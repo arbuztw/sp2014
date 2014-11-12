@@ -1,12 +1,12 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <fcntl.h>
 #include <signal.h>
 #define BUFSZ 1024
-#define SWAP(a,b) a^=b^=a^=b
 #define ERR_EXIT(s) { perror(s); exit(1); }
 
 typedef struct {
@@ -140,6 +140,8 @@ void init()
 {
    int i, j;
 
+   srand(time(NULL));
+
    for (i = 0; i < 4; i++)
    {
       p[i].num_card = i > 0 ? 13 : 14;
@@ -210,15 +212,15 @@ int read_from_pipe(int *num)
    int i, pidx, key;
    char buf[BUFSZ];
 
-   fgets(buf, BUFSZ, fin);
+   while (1) {
+      fgets(buf, BUFSZ, fin);
 
-   pidx = buf[0] - 'A';
-   key = 0;
-   for (i = 2; buf[i] != ' '; i++)
-      key = key * 10 + buf[i] - '0';
-   if (key != p[pidx].key) {
-      fprintf(stderr, "Someone cheated!\n");
-      exit(1);
+      pidx = buf[0] - 'A';
+      key = 0;
+      for (i = 2; buf[i] != ' '; i++)
+         key = key * 10 + buf[i] - '0';
+      if (key == p[pidx].key)
+         break;
    }
    *num = 0;
    for (i++; buf[i] != '\n'; i++)
