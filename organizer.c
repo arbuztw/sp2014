@@ -22,9 +22,10 @@ void assign(int judgeid, int comp_id);
 int get_loser(int fd);
 void sortByScore(int n);
 
+
 int main(int argc, char *argv[])
 {
-   int judge_num, player_num, ret_num;
+   int judge_num, player_num, ret_num, stat;
    int fd1[2], fd2[2];
    int maxfd = 0, loser;
    int i, j, k, l;
@@ -50,7 +51,7 @@ int main(int argc, char *argv[])
          close(fd2[0]);
          close(fd2[1]);
          sprintf(judgeid, "%d", i);
-         fprintf(stderr, "judge %s\n", judgeid);
+         //fprintf(stderr, "judge %s\n", judgeid);
          if (execlp("./judge", "judge", judgeid, (char*)0) < 0)
             ERR_EXIT("execlp");
       }
@@ -89,7 +90,7 @@ int main(int argc, char *argv[])
       for (i = 1; i <= judge_num; i++) {
          if (!FD_ISSET(judge[i].read_fd, &cset)) continue;
          loser = get_loser(judge[i].read_fd);
-         fprintf(stderr, "loser = %d\n", loser);
+         //fprintf(stderr, "loser = %d\n", loser);
          score[loser]--;
          ret_num--;
          if (comp_num > 1)
@@ -98,8 +99,9 @@ int main(int argc, char *argv[])
    }
 
    for (i = 1; i <= judge_num; i++)
-      assign(1, 0);
+      assign(i, 0);
 
+   while (wait(&stat) > 0);
    /*
    for (i = 1; i <= player_num; i++)
       fprintf(stderr, "%d ", score[i]);
