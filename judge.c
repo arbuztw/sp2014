@@ -56,7 +56,6 @@ int main(int argc, char *argv[])
       for (i = 0; i < 4; i++) {
          sprintf(pindex, "%c", 'A'+i);
          sprintf(key, "%d", p[i].key);
-         fprintf(stderr, "%c %s\n", 'A'+i, key);
          if ((p[i].pid = fork()) == 0) {
             if (execlp("./player", "player", argv[1], pindex, key, (char*)0) < 0)
                ERR_EXIT("execl");
@@ -198,7 +197,6 @@ void deal_card()
          fprintf(p[i].pipe, "%d ", pile[i*13+j]);
       fprintf(p[i].pipe, "%d\n", pile[i*13+j]);
       fflush(p[i].pipe);
-      fprintf(stderr, "deal player %c\n", 'A'+i);
    }
 
    for (i = 0; i < 4; i++) {
@@ -213,7 +211,6 @@ int read_from_pipe(int *num)
    char buf[BUFSZ];
 
    fgets(buf, BUFSZ, fin);
-   //fprintf(stderr, "buf=%s", buf);
 
    pidx = buf[0] - 'A';
    key = 0;
