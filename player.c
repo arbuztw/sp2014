@@ -1,23 +1,17 @@
 #include <stdio.h>
 #include <stdlib.h>
-#define NUM_CARD 1024 
+#define NUM_CARD 16 
 #define MAX_ID 13
 #define BUFSZ 1024
 
-struct Node {
-   int id;
-   struct Node *next;
-} mem[NUM_CARD], *head, *tail;
-int num_card;
+int num_card, cards[16];
 int mcnt;
 int count[MAX_ID+1], rmcnt[MAX_ID+1];
 
-inline struct Node *getNode() { return &mem[mcnt++]; }
 void insert_card(int id);
 void remove_dup();
 void remove_card(int id);
 int get_card_n(int n);
-
 
 int main(int argc, char *argv[])
 {
@@ -32,9 +26,6 @@ int main(int argc, char *argv[])
 
    m = (argv[2][0] == 'A') ? 14 : 13;
    num_card = 0;
-   head = getNode();
-   head->id = -1;
-   head->next = tail = NULL;
 
    for (i = 0; i < m; i++) {
       fscanf(fin, "%d", &id);
@@ -75,64 +66,50 @@ int main(int argc, char *argv[])
 
 void insert_card(int id)
 {
-   struct Node *p = getNode();
-
-   num_card++;
    count[id]++;
-
-   p->id = id;
-   p->next = NULL;
-
-   if (tail == NULL)
-      head->next = tail = p;
-   else {
-      tail->next = p;
-      tail = tail->next;
-   }
+   cards[num_card++] = id;
 }
 
 void remove_dup()
 {
-   struct Node *p = head;
-   int i;
+   int i, j, tmp = num_card;
 
    for (i = 0; i <= MAX_ID; i++)
       rmcnt[i] = (count[i] / 2) * 2;
 
-   while (p->next) {
-      if (rmcnt[p->next->id] > 0) {
+   for (i = 0; i < tmp; i++) {
+      if (rmcnt[cards[i]] > 0) {
          num_card--;
-         count[p->next->id]--;
-         rmcnt[p->next->id]--;
-         p->next = p->next->next;
+         count[cards[i]]--;
+         rmcnt[cards[i]]--;
+         cards[i] = -1;
       }
-      else
-         p = p->next;
    }
-   tail = p;
+
+   for (i = j = 0; i < tmp; i++) {
+      if (cards[i] != -1) {
+         cards[j++] = cards[i];
+      }
+   }
 }
 
 void remove_card(int id)
 {
-   struct Node *p;
-
-   for (p = head; p->next; p = p->next) {
-      if (p->next->id == id) {
+   int i;
+   
+   for (i = 0; i < num_card; i++) {
+      if (cards[i] == id) {
          num_card--;
-         count[id]--;
-         p->next = p->next->next;
+         while (i < num_card) {
+            cards[i] = cards[i+1];
+            i++;
+         }
          break;
       }
    }
-   if (!p->next) tail = p;
 }
 
 int get_card_n(int n)
 {
-   struct Node *p = head->next;
-   int i;
-
-   for (i = 0; i < n; i++) p = p->next;
-
-   return p->id;
+   return cards[n];
 }
