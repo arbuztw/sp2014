@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
 
    while (~fscanf(fin, "%s %d", type, &num)) {
       if (type[0] == '<') {
-         fprintf(fout, "%s %s %d\n", argv[2], argv[3], rand() % num);
+         fprintf(fout, "%s %s %d\n", argv[2], argv[3], rand() % num + 1);
          fflush(fout);
          fscanf(fin, "%d", &num);
          if (count[num] > 0) {
@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
          }
       }
       else {
-         num = get_card_n(num);
+         num = get_card_n(num) - 1;
          remove_card(num);
          fprintf(fout, "%s %s %d\n", argv[2], argv[3], num);
       }
