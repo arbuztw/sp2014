@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 #include <sys/types.h>
 #include <fcntl.h>
 #include <signal.h>
@@ -42,16 +43,18 @@ int main(int argc, char *argv[])
       exit(1);
    }
 
+   srand(time(NULL));
+
    sprintf(fname, "judge%s.FIFO", argv[1]);
-
-   if (mkfifo(fname, 0664) < 0)
-      ERR_EXIT("mkfifo");
-
-   make_child_fifo(argv[1]);
 
    scanf("%d %d %d %d", &p[0].id, &p[1].id, &p[2].id, &p[3].id);
    while (p[0].id || p[1].id || p[2].id || p[3].id) {
       sort(p, 4);
+
+      if (mkfifo(fname, 0664) < 0)
+         ERR_EXIT("mkfifo");
+      make_child_fifo(argv[1]);
+
       init();
       for (i = 0; i < 4; i++) {
          sprintf(pindex, "%c", 'A'+i);
@@ -60,10 +63,10 @@ int main(int argc, char *argv[])
             if (execlp("./player", "player", argv[1], pindex, key, (char*)0) < 0)
                ERR_EXIT("execl");
          }
-         p[i].pipe = fopen(child_fifo[i], "w");
+         p[i].pipe = fopen(child_fifo[i], "w+");
       }
 
-      fin = fopen(fname, "r");
+      fin = fopen(fname, "r+");
 
       deal_card();
 
@@ -103,6 +106,8 @@ int main(int argc, char *argv[])
       for (i = 0; i < 4; i++)
          fclose(p[i].pipe);
       fclose(fin);
+      for (i = 0; i < 4; i++)
+         kill(p[i].pid, SIGTERM);
       while (wait(&stat) > 0);
 
       for (i = 0; i < 4; i++)
@@ -111,13 +116,11 @@ int main(int argc, char *argv[])
             fflush(stdout);
          }
 
+      clean_child_fifo();
+      unlink(fname);
+
       scanf("%d %d %d %d", &p[0].id, &p[1].id, &p[2].id, &p[3].id);
    }
-
-   clean_child_fifo();
-   unlink(fname);
-
-
 
    return 0;
 }
@@ -140,7 +143,6 @@ void init()
 {
    int i, j;
 
-   srand(time(NULL));
 
    for (i = 0; i < 4; i++)
    {

@@ -5,6 +5,7 @@
 #include <limits.h>
 #include <sys/types.h>
 #include <sys/select.h>
+#include <sys/wait.h>
 #define ERR_EXIT(s) { perror(s); exit(1); }
 #define MAX_JUDGE 16
 #define MAX_PLAYER 20
@@ -25,7 +26,7 @@ void sortByScore(int n);
 
 int main(int argc, char *argv[])
 {
-   int judge_num, player_num, ret_num;
+   int judge_num, player_num, ret_num, stat;
    int fd1[2], fd2[2];
    int maxfd = 0, loser;
    int i, j, k, l;
@@ -99,6 +100,7 @@ int main(int argc, char *argv[])
    for (i = 1; i <= judge_num; i++)
       assign(i, 0);
 
+   while (wait(&stat) > 0);
 
    for (i = 1; i <= player_num; i++) player_id[i] = i;
    sortByScore(player_num);

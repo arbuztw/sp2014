@@ -20,9 +20,9 @@ int main(int argc, char *argv[])
    FILE *fin, *fout;
    
    sprintf(fname, "judge%s_%s.FIFO", argv[1], argv[2]);
-   fin = fopen(fname, "r");
+   fin = fopen(fname, "r+");
    sprintf(fname, "judge%s.FIFO", argv[1]);
-   fout = fopen(fname, "w");
+   fout = fopen(fname, "w+");
 
    m = (argv[2][0] == 'A') ? 14 : 13;
    num_card = 0;
@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
          }
       }
       else {
-         num = get_card_n(num) - 1;
+         num = get_card_n(num-1);
          remove_card(num);
          fprintf(fout, "%s %s %d\n", argv[2], argv[3], num);
       }
@@ -99,6 +99,7 @@ void remove_card(int id)
    
    for (i = 0; i < num_card; i++) {
       if (cards[i] == id) {
+         count[id]--;
          num_card--;
          while (i < num_card) {
             cards[i] = cards[i+1];
