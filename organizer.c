@@ -106,8 +106,8 @@ int main(int argc, char *argv[])
    sortByScore(player_num);
 
    for (i = 1; i < player_num; i++)
-      fprintf(stderr, "%d ", player_id[i]);
-   fprintf(stderr, "%d\n", player_id[i]);
+      printf("%d ", player_id[i]);
+   printf("%d\n", player_id[i]);
    
    return 0;
 }
