@@ -17,11 +17,11 @@ int main(int argc, char *argv[])
       exit(1);
    }
 
-   int fd[2], count[3] = {0};
+   int fd[2], count[3] = {0}, pid;
    char buf[BUFSZ];
 
    pipe(fd);
-   if (fork() == 0) {
+   if ((pid = fork()) == 0) {
       dup2(fd[1], STDOUT_FILENO);
       close(fd[0]);
       close(fd[1]);
@@ -35,9 +35,10 @@ int main(int argc, char *argv[])
    signal(SIGINT, sig_int);
 
    while (read(fd[0], buf, BUFSZ) > 0) {
-      if (!strcmp(buf, "receiver\n")) {
+      if (!strcmp(buf, "ordinary\n")) {
          fprintf(flog, "receive 0 %d\n", count[0]);
          usleep(1000);
+         kill(pid, SIGINT);
          fprintf(flog, "finish 0 %d\n", count[0]++);
       }
    }
